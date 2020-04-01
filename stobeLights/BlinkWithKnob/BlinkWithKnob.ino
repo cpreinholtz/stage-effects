@@ -70,13 +70,12 @@ void loop()
   } else {    
     currentMillis = millis();
     
-    analogSample = analogRead(analogPin) ;
-    analogSample =  analogSample>>2;
+    analogSample = ((analogRead(analogPin)>>2) + 15*analogSample) >>4 ;
     
     if (analogSample > maximumInterval)analogSample= maximumInterval;
     else if(analogSample < minimumInterval)analogSample=  minimumInterval;
     
-    Serial.println(analogSample);  
+    //Serial.println(analogSample);  
     
     if(currentMillis - previousMillis > analogSample) {
       // save the last time you blinked the LED 
