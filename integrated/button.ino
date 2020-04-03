@@ -1,9 +1,6 @@
 
 #include "button.h"
 
-
-
-
 void buttonRIsr() {
   buttonR.setRisingEdge();
 }

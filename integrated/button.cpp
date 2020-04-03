@@ -1,6 +1,9 @@
 #include "Arduino.h"
 #include "button.h"
 
+/////////////////////////////////////////////////////////////////////
+//Ctor
+/////////////////////////////////////////////////////////////////////
 Button::Button(int pin, unsigned long debounce)
 {
   pinMode(mPin, INPUT);
@@ -11,16 +14,10 @@ Button::Button(int pin, unsigned long debounce)
   mEdgeTime = 0;
 }
 
-bool Button::getState()
-{
-  if(digitalRead(mPin)== HIGH){
-    //if( mEdgeHit == false) setRisingEdge();
-    return true;
-  } else {
-    return false;
-  }  
-}
 
+/////////////////////////////////////////////////////////////////////
+//Setters
+/////////////////////////////////////////////////////////////////////
 void Button::clearRisingEdge()
 {
   mEdgeHit = false;
@@ -36,7 +33,18 @@ void Button::setRisingEdge()
   }
 }
 
-
+/////////////////////////////////////////////////////////////////////
+//Getters
+/////////////////////////////////////////////////////////////////////
+bool Button::getState()
+{
+  if(digitalRead(mPin)== HIGH){
+    //if( mEdgeHit == false) setRisingEdge();
+    return true;
+  } else {
+    return false;
+  }  
+}
 
 bool Button::getRisingEdge()
 {
