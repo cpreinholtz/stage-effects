@@ -4,9 +4,13 @@
 #include "Arduino.h"
 
 
-const int mNumSequences = 2;      
-const int mNumP = 5;    
-const int mPins[mNumP] = {4,7,8,12,13};
+const int kNumSequences = 2;      
+
+//extern const int kSequenceNumPins;
+//extern const int kSequencePins[kSequenceNumPins];
+
+const int kSequenceNumPins = 6;    
+const int kSequencePins[kSequenceNumPins] = {13,12,11,10,9,8};
 
 
 class Sequence {
@@ -18,12 +22,11 @@ class Sequence {
     //Ctor
     /////////////////////////////////////////////////////////////////////
     Sequence(int dummy){
-      for (int i=0; i< mNumP; i++){
+      for (int i=0; i< kSequenceNumPins; i++){
         mStates[i] = false;        
-        pinMode(mPins[i], OUTPUT);
+        pinMode(kSequencePins[i], OUTPUT);
       }
       mRepeatTarget=0 ; //count till
-      mRepeatCount =0; //count
       mStartMillis =0;
       mBusy = false;
       generateM0();
@@ -47,7 +50,7 @@ class Sequence {
         int rp=0;
 
         while ( 1 ){         
-          if (st>=mNumP ){
+          if (st>=kSequenceNumPins ){
             if(rp >=mRepeatTarget) break;
             else {st = 0; rp ++;}
           }
@@ -56,10 +59,10 @@ class Sequence {
           else st++;          
         }
         
-        if (st<mNumP){
-          for (int i=0; i < mNumP; i++) mStates[i] = m[mCurrentSequence][st][0]>>i & 1;
+        if (st<kSequenceNumPins){
+          for (int i=0; i < kSequenceNumPins; i++) mStates[i] = m[mCurrentSequence][st][0]>>i & 1;
         } else {
-          for (int i=0; i < mNumP; i++) mStates[i] = 0;
+          for (int i=0; i < kSequenceNumPins; i++) mStates[i] = 0;
           mBusy = false;
         }    
            
@@ -81,8 +84,8 @@ class Sequence {
     //Util
     /////////////////////////////////////////////////////////////////////
     void writeStates(){
-      for (int i=0; i< mNumP; i++){
-        digitalWrite(mPins[i],mStates[i]);
+      for (int i=0; i< kSequenceNumPins; i++){
+        digitalWrite(kSequencePins[i],mStates[i]);
       }
     };
 
@@ -96,7 +99,7 @@ class Sequence {
     /////////////////////////////////////////////////////////////////////
     int getStates(){
       int states=0;
-      for (int i=0; i< mNumP; i++){
+      for (int i=0; i< kSequenceNumPins; i++){
         if( mStates[i] )  states = states + 1<<i;
       }
       return states;
@@ -118,11 +121,11 @@ class Sequence {
     
     
   private:
-    //static const int mNumSequences = 2;      
-    //static const int mNumP = 5;    
-    //static const int mPins[mNumP] = {4,7,8,12,13};
+    //static const int kNumSequences = 2;      
+    //static const int kSequenceNumPins = 5;    
+    //static const int kSequencePins[kSequenceNumPins] = {4,7,8,12,13};
 
-    bool mStates[mNumP];
+    bool mStates[kSequenceNumPins];
 
     int mRepeatTarget; //count till
     //int mRepeatCount; //count
@@ -132,11 +135,11 @@ class Sequence {
 
     int mCurrentSequence;
 
-    int  m[mNumSequences][mNumP][2];     
+    int  m[kNumSequences][kSequenceNumPins][2];     
 
       
     void generateM0(){        //= { {0b00000001, 100}, {0b00000010, 100} ... };
-      for (int i=0; i< mNumP; i++){
+      for (int i=0; i< kSequenceNumPins; i++){
         m[0][i][0] = 1 << i;
         m[0][i][1] = 100;
       }
@@ -147,8 +150,8 @@ class Sequence {
       m[1][0][0] = 0b11111111; 
       m[1][0][1] = 25;   
       m[1][1][0] = 0b00000000; 
-      m[1][1][1] = 25; 
-      for (int i=2; i< mNumP; i++){
+      m[1][1][1] = 100; 
+      for (int i=2; i< kSequenceNumPins; i++){
         m[1][i][0] = 0;
         m[1][i][1] = 0;
       }
