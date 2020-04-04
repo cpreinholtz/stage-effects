@@ -4,26 +4,29 @@
 #include "Arduino.h"
 
 
-const int kNumSequences = 2;      
+
 
 //extern const int kSequenceNumPins;
 //extern const int kSequencePins[kSequenceNumPins];
 
+const int kDefaultState = 0b00010000;
+
 const int kSequenceNumPins = 6;    
-const int kSequencePins[kSequenceNumPins] = {13,12,11,10,9,8};
+const int kSequencePins[kSequenceNumPins] ={13,12,11,10,9,8};
+
+const int kNumSequences = 2;      
+const int kNumBlocksPerSequence = kSequenceNumPins*2;
 
 
 class Sequence {
   public:
-
-
 
     /////////////////////////////////////////////////////////////////////
     //Ctor
     /////////////////////////////////////////////////////////////////////
     Sequence(int dummy){
       for (int i=0; i< kSequenceNumPins; i++){
-        mStates[i] = false;        
+        mPinStates[i] = kDefaultState>>i & 1;        
         pinMode(kSequencePins[i], OUTPUT);
       }
       mRepeatTarget=0 ; //count till
@@ -39,30 +42,27 @@ class Sequence {
     /////////////////////////////////////////////////////////////////////
 
     void evauluateStates(){
-      //Serial.println("busy");
-      //Serial.println(mBusy);
       if (mBusy == true){
-        
-
-        int seqTime=0;
+                
         unsigned long elapsedTime = millis() -mStartMillis;
-        int st=0;
+        int seqTime=0;
+        int block=0;
         int rp=0;
 
         while ( 1 ){         
-          if (st>=kSequenceNumPins ){
+          if (block>=kNumBlocksPerSequence ){
             if(rp >=mRepeatTarget) break;
-            else {st = 0; rp ++;}
+            else {block = 0; rp ++;}
           }
-          seqTime = seqTime + m[mCurrentSequence][st][1]; 
+          seqTime = seqTime + m[mCurrentSequence][block][1]; 
           if ( elapsedTime < seqTime ) break; //return current state
-          else st++;          
+          else block++;          
         }
         
-        if (st<kSequenceNumPins){
-          for (int i=0; i < kSequenceNumPins; i++) mStates[i] = m[mCurrentSequence][st][0]>>i & 1;
+        if (block<kNumBlocksPerSequence){
+          for (int i=0; i < kSequenceNumPins; i++) mPinStates[i] = m[mCurrentSequence][block][0]>>i & 1;
         } else {
-          for (int i=0; i < kSequenceNumPins; i++) mStates[i] = 0;
+          for (int i=0; i < kSequenceNumPins; i++) mPinStates[i] = kDefaultState>>i & 1;
           mBusy = false;
         }    
            
@@ -78,6 +78,17 @@ class Sequence {
       }
     };
 
+
+    void setSequenceTimes(int seq, int timeMs){
+      for (int i=0; i< kNumBlocksPerSequence; i++){
+        //m[seq][i][0] = 1 << i%kSequenceNumPins;
+        m[seq][i][1] = timeMs;
+      }
+    };
+    
+    void setSequenceTime(int seq, int block, int timeMs){
+      m[seq][block][1] = timeMs;
+    };
     
     
     /////////////////////////////////////////////////////////////////////
@@ -85,7 +96,7 @@ class Sequence {
     /////////////////////////////////////////////////////////////////////
     void writeStates(){
       for (int i=0; i< kSequenceNumPins; i++){
-        digitalWrite(kSequencePins[i],mStates[i]);
+        digitalWrite(kSequencePins[i],mPinStates[i]);
       }
     };
 
@@ -100,7 +111,7 @@ class Sequence {
     int getStates(){
       int states=0;
       for (int i=0; i< kSequenceNumPins; i++){
-        if( mStates[i] )  states = states + 1<<i;
+        if( mPinStates[i] )  states = states + 1<<i;
       }
       return states;
     };   
@@ -121,26 +132,23 @@ class Sequence {
     
     
   private:
-    //static const int kNumSequences = 2;      
-    //static const int kSequenceNumPins = 5;    
-    //static const int kSequencePins[kSequenceNumPins] = {4,7,8,12,13};
 
-    bool mStates[kSequenceNumPins];
+    bool mPinStates[kSequenceNumPins];
 
     int mRepeatTarget; //count till
-    //int mRepeatCount; //count
-    
+
     unsigned long mStartMillis;
+    
     bool mBusy;
 
     int mCurrentSequence;
 
-    int  m[kNumSequences][kSequenceNumPins][2];     
+    int  m[kNumSequences][kNumBlocksPerSequence][2];     
 
       
     void generateM0(){        //= { {0b00000001, 100}, {0b00000010, 100} ... };
-      for (int i=0; i< kSequenceNumPins; i++){
-        m[0][i][0] = 1 << i;
+      for (int i=0; i< kNumBlocksPerSequence; i++){
+        m[0][i][0] = 1 << i%kSequenceNumPins;
         m[0][i][1] = 100;
       }
     };
@@ -151,7 +159,7 @@ class Sequence {
       m[1][0][1] = 25;   
       m[1][1][0] = 0b00000000; 
       m[1][1][1] = 100; 
-      for (int i=2; i< kSequenceNumPins; i++){
+      for (int i=2; i< kNumBlocksPerSequence; i++){
         m[1][i][0] = 0;
         m[1][i][1] = 0;
       }
